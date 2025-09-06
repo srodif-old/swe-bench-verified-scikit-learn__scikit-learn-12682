@@ -865,7 +865,8 @@ class SparseCodingMixin(TransformerMixin):
                                   transform_algorithm='omp',
                                   transform_n_nonzero_coefs=None,
                                   transform_alpha=None, split_sign=False,
-                                  n_jobs=None, positive_code=False):
+                                  n_jobs=None, positive_code=False,
+                                  max_iter=1000):
         self.n_components = n_components
         self.transform_algorithm = transform_algorithm
         self.transform_n_nonzero_coefs = transform_n_nonzero_coefs
@@ -873,6 +874,7 @@ class SparseCodingMixin(TransformerMixin):
         self.split_sign = split_sign
         self.n_jobs = n_jobs
         self.positive_code = positive_code
+        self.max_iter = max_iter
 
     def transform(self, X):
         """Encode the data as a sparse combination of the dictionary atoms.
@@ -900,7 +902,7 @@ class SparseCodingMixin(TransformerMixin):
             X, self.components_, algorithm=self.transform_algorithm,
             n_nonzero_coefs=self.transform_n_nonzero_coefs,
             alpha=self.transform_alpha, n_jobs=self.n_jobs,
-            positive=self.positive_code)
+            positive=self.positive_code, max_iter=self.max_iter)
 
         if self.split_sign:
             # feature vector is split into a positive and negative side
@@ -974,6 +976,9 @@ class SparseCoder(BaseEstimator, SparseCodingMixin):
 
         .. versionadded:: 0.20
 
+    max_iter : int, 1000 by default
+        Maximum number of iterations to perform if `algorithm='lasso_cd'`.
+
     Attributes
     ----------
     components_ : array, [n_components, n_features]
@@ -991,12 +996,13 @@ class SparseCoder(BaseEstimator, SparseCodingMixin):
 
     def __init__(self, dictionary, transform_algorithm='omp',
                  transform_n_nonzero_coefs=None, transform_alpha=None,
-                 split_sign=False, n_jobs=None, positive_code=False):
+                 split_sign=False, n_jobs=None, positive_code=False,
+                 max_iter=1000):
         self._set_sparse_coding_params(dictionary.shape[0],
                                        transform_algorithm,
                                        transform_n_nonzero_coefs,
                                        transform_alpha, split_sign, n_jobs,
-                                       positive_code)
+                                       positive_code, max_iter)
         self.components_ = dictionary
 
     def fit(self, X, y=None):
@@ -1157,7 +1163,7 @@ class DictionaryLearning(BaseEstimator, SparseCodingMixin):
         self._set_sparse_coding_params(n_components, transform_algorithm,
                                        transform_n_nonzero_coefs,
                                        transform_alpha, split_sign, n_jobs,
-                                       positive_code)
+                                       positive_code, max_iter)
         self.alpha = alpha
         self.max_iter = max_iter
         self.tol = tol
@@ -1346,7 +1352,7 @@ class MiniBatchDictionaryLearning(BaseEstimator, SparseCodingMixin):
         self._set_sparse_coding_params(n_components, transform_algorithm,
                                        transform_n_nonzero_coefs,
                                        transform_alpha, split_sign, n_jobs,
-                                       positive_code)
+                                       positive_code, n_iter)
         self.alpha = alpha
         self.n_iter = n_iter
         self.fit_algorithm = fit_algorithm

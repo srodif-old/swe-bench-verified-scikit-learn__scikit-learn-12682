@@ -451,3 +451,33 @@ def test_sparse_coder_parallel_mmap():
 
     sc = SparseCoder(init_dict, transform_algorithm='omp', n_jobs=2)
     sc.fit_transform(data)
+
+
+def test_sparse_coder_max_iter():
+    """Test that SparseCoder accepts max_iter parameter and uses it."""
+    rng = np.random.RandomState(0)
+    n_components, n_features = 5, 8
+    init_dict = rng.randn(n_components, n_features)
+    X = rng.randn(3, n_features)
+    
+    # Test that max_iter parameter is accepted
+    sc = SparseCoder(init_dict, transform_algorithm='lasso_cd', 
+                     transform_alpha=0.1, max_iter=100)
+    
+    # Verify max_iter is stored as an attribute
+    assert hasattr(sc, 'max_iter')
+    assert sc.max_iter == 100
+    
+    # Test with different max_iter values - should not raise errors
+    sc_low = SparseCoder(init_dict, transform_algorithm='lasso_cd',
+                         transform_alpha=0.1, max_iter=10)
+    assert sc_low.max_iter == 10
+    
+    # Test default value
+    sc_default = SparseCoder(init_dict, transform_algorithm='lasso_cd',
+                             transform_alpha=0.1)
+    assert sc_default.max_iter == 1000
+    
+    # Test that transform works (this is the key functionality)
+    code = sc.transform(X)
+    assert code.shape == (3, n_components)
